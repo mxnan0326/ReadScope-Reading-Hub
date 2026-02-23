@@ -1,0 +1,26 @@
+# 排除 Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 排除前端依赖构建
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# 排除本地知识库和日志等无关历史文件
+archive/
+logs/
+.claude/
+exported-cookies.json
+How to create Skills for Claude steps and examples  Claude.md
+
+# 排除环境变量
+.env
+.env.*
+!.env.example
+
+# 排除操作系统文件
+.DS_Store
+Thumbs.db
