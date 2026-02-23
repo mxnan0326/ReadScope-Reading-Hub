@@ -3,12 +3,15 @@ name: 自动更新飞书数据
 # 这个工作流的触发条件
 on:
   # 1. 每天定时自动触发（cron 语法使用的是 UTC 时间）
-  # 例如 '0 0,12 * * *' 表示每天 UTC 时间的 0点 和 12点运行（也就是北京时间的 8点 和 20点）
   schedule:
     - cron: '0 0,12 * * *'
     
   # 2. 支持你在 GitHub 网页上点击按钮手动运行
   workflow_dispatch:
+  
+  # 3. 接受外部 Webhook (例如飞书) 发送的通知来触发
+  repository_dispatch:
+    types: [feishu_update]
 
 jobs:
   update:
