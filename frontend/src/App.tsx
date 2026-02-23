@@ -1,5 +1,4 @@
-import { useState, useMemo } from 'react'
-import rawData from './data/data.json'
+import { useState, useMemo, useEffect } from 'react'
 import type { Article } from './types'
 import Header from './components/Header'
 import HeroSection from './components/HeroSection'
@@ -8,21 +7,33 @@ import ArticleGrid from './components/ArticleGrid'
 import ArticleDetail from './components/ArticleDetail'
 import Footer from './components/Footer'
 
-const articles: Article[] = rawData as Article[]
-
-// 提取所有唯一标签，过滤无效标签
-const allTags = Array.from(
-  new Set(
-    articles.flatMap(a =>
-      a.tags.filter(t => t && !t.includes('无匹配'))
-    )
-  )
-).sort()
-
 function App() {
+  const [articles, setArticles] = useState<Article[]>([])
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // 动态加载数据
+  useEffect(() => {
+    fetch('/data.json')
+      .then(res => res.json())
+      .then(data => {
+        const sortedData = (data as Article[]).reverse()
+        setArticles(sortedData)
+      })
+      .catch(err => console.error('加载数据失败:', err))
+  }, [])
+
+  // 提取所有唯一标签，过滤无效标签
+  const allTags = useMemo(() => {
+    return Array.from(
+      new Set(
+        articles.flatMap(a =>
+          a.tags.filter(t => t && !t.includes('无匹配'))
+        )
+      )
+    ).sort()
+  }, [articles])
 
   const filtered = useMemo(() => {
     return articles.filter(article => {
@@ -35,7 +46,7 @@ function App() {
         article.guest.toLowerCase().includes(q)
       return tagMatch && textMatch
     })
-  }, [selectedTag, searchQuery])
+  }, [selectedTag, searchQuery, articles])
 
   return (
     <div className="min-h-screen bg-background">

@@ -7,7 +7,7 @@ import datetime
 # --- 配置 ---
 FEISHU_APP_ID = "cli_a910798ea7b85cd5"
 FEISHU_APP_SECRET = "P83VlWGlEDlaQKgJprOmCg15YNzSaUNq"
-NODE_TOKEN = "QxZowDODyiYt9bkaBKucDZNInmd"
+NODE_TOKEN = "MYIMb2H33aEV4Ss1cVycvLJXnkd"
 TABLE_ID = "tbl5bNknHd7Pua4x"
 
 # 路径配置
@@ -15,7 +15,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
 ASSETS_DIR = os.path.join(FRONTEND_DIR, "public", "images")
-DATA_DIR = os.path.join(FRONTEND_DIR, "src", "data")
+DATA_DIR = os.path.join(FRONTEND_DIR, "public")
 
 os.makedirs(ASSETS_DIR, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -181,19 +181,26 @@ def main():
             if q.strip():
                 quotes.append(q.strip())
 
-        # 封面图 —— 使用飞书附件 file_token 下载
+        # 封面图 —— 检查本地缓存或下载
         cover_image = ""
-        cover_field = fields.get("封面图")
-        if isinstance(cover_field, list) and cover_field:
-            file_token = cover_field[0].get("file_token") or cover_field[0].get("token")
-            if file_token:
-                print(f"[{idx}/{len(raw_records)}] 下载封面图: {title[:30]}...")
-                cover_image = download_cover(token, file_token, record_id)
-            else:
-                print(f"[{idx}/{len(raw_records)}] 无 file_token，跳过封面图: {title[:30]}")
+        # 1. 先检查本地是否存在以 record_id 开头的文件 (例如 .jpg, .png)
+        existing_images = [f for f in os.listdir(ASSETS_DIR) if f.startswith(record_id) and f.lower().endswith(('.jpg', '.png', '.gif', '.webp'))]
+        if existing_images:
+            # 找到缓存，直接使用缓存
+            cover_image = f"/images/{existing_images[0]}"
+            print(f"[{idx}/{len(raw_records)}] 封面图已存在，跳过下载: {title[:30]}")
         else:
-            # cover_field 为空，保持空字符串
-            pass
+            # 2. 如果不存在且有飞书附件，则执行下载
+            cover_field = fields.get("封面图")
+            if isinstance(cover_field, list) and cover_field:
+                file_token = cover_field[0].get("file_token") or cover_field[0].get("token")
+                if file_token:
+                    print(f"[{idx}/{len(raw_records)}] 下载封面图: {title[:30]}...")
+                    cover_image = download_cover(token, file_token, record_id)
+                else:
+                    print(f"[{idx}/{len(raw_records)}] 无 file_token，跳过封面图: {title[:30]}")
+            else:
+                pass
 
         formatted_data.append({
             "id": record_id,
